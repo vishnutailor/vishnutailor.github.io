@@ -58,12 +58,13 @@ nav a.active {
 }
 
 .headshot {
-  width: 118px;
-  height: 118px;
+  width: 92px;
+  height: 92px;
   border-radius: 50%;
   object-fit: cover;
+  object-position: center 20%;
   flex-shrink: 0;
-  box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
 }
 
 h1 {
