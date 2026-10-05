@@ -378,3 +378,29 @@ footer { border-top: 1px solid var(--line); padding-top: 24px; line-height: 2; }
 @media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
  .custom-cursor, .custom-cursor * { cursor: none !important; }
 }
+
+/* Warm typography on a black canvas, shared by every page. */
+:root { --bg: #000; --text: #eadfc9; --muted: #b0a594; --line: #302b24; --link: #eadfc9; color-scheme: dark; }
+body { font-family: 'Avenir Next', Avenir, 'Segoe UI', sans-serif; background: #000; }
+.wrap { padding-bottom: 150px; }
+.hero { background: #000; border-color: var(--line); }
+h1, .page-title, nav .brand { font-family: 'Baskerville', 'Iowan Old Style', 'Palatino Linotype', Georgia, serif; }
+.brand-dot { background: #c6aa7b; }
+.tagline, .caption, .item p, .year, .section-title, .interaction-hint { color: var(--muted); }
+.item h3, .caption strong { color: var(--text); }
+.item:hover, .paper-entry:hover { background: #171410; }
+.headshot, .card img { background: #171410; }
+a:focus-visible { outline-color: #d6bb8d; }
+::selection { background: #eadfc9; color: #000; }
+.glass-lens { background: #090806e8; border-color: #b6a18077; box-shadow: inset 4px 3px 14px #e5cba522, inset -4px -3px 14px #b2946b22, 0 5px 25px #0005; }
+.lens-copy { color: var(--text); text-shadow: -1px 0 #beac8b55, 1px 0 #e5cba555; }
+.glass-lens::after { box-shadow: inset 0 0 12px #eadfc922; background: linear-gradient(135deg, #eadfc915, transparent 45%); }
+nav.dock-panel { position: fixed; z-index: 100; left: 50%; bottom: max(20px, env(safe-area-inset-bottom)); transform: translateX(-50%); display: flex; align-items: flex-end; gap: 12px; height: 68px; margin: 0; padding: 9px 12px; border: 1px solid #5a4d3a88; border-radius: 22px; background: #171410e8; box-shadow: 0 8px 40px #0008; backdrop-filter: blur(18px); overflow: visible; }
+.dock-item { position: relative; display: grid; place-items: center; flex: 0 0 auto; width: 50px; height: 50px; border: 1px solid #eadfc914 !important; border-radius: 15px; padding: 0 !important; color: var(--text); background: #272119; text-decoration: none; }
+.dock-item.current { background: #3b3021; border-color: #c6aa7b66 !important; }
+.dock-item svg { width: 48%; height: 48%; pointer-events: none; }
+.dock-label { position: absolute; bottom: calc(100% + 12px); left: 50%; transform: translateX(-50%) translateY(4px); padding: 6px 10px; border: 1px solid var(--line); border-radius: 7px; background: #171410; color: var(--text); font-size: 12px; white-space: nowrap; pointer-events: none; opacity: 0; transition: opacity .15s, transform .15s; }
+.dock-item:hover .dock-label, .dock-item:focus-visible .dock-label { opacity: 1; transform: translateX(-50%) translateY(0); }
+@media (max-width: 560px) { nav.dock-panel { gap: 8px; padding-inline: 10px; } }
+@media (prefers-reduced-motion: reduce) { .dock-item { width: 50px !important; height: 50px !important; } }
+

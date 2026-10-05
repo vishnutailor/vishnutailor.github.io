@@ -81,3 +81,61 @@
     });
   }
 })();
+
+/* Static-site adaptation of a proximity-magnifying dock. */
+(() => {
+  const dock = document.querySelector('.dock-panel');
+  if (!dock) return;
+  const options = { distance: 200, panelHeight: 68, baseItemSize: 50, dockHeight: 256, magnification: 70, spring: { mass: 0.1, stiffness: 150, damping: 12 } };
+  const items = [...dock.querySelectorAll('.dock-item')];
+  const states = items.map(() => ({ size: options.baseItemSize, velocity: 0, target: options.baseItemSize }));
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
+  let frame = 0, last = 0;
+  const tick = time => {
+    const dt = Math.min((time - (last || time - 16)) / 1000, 0.032);
+    last = time;
+    let moving = false;
+    states.forEach((state, index) => {
+      // Small integration steps keep the requested spring stable.
+      const steps = Math.max(1, Math.ceil(dt / 0.004));
+      const step = dt / steps;
+      for (let i = 0; i < steps; i++) {
+        const force = options.spring.stiffness * (state.target - state.size) - options.spring.damping * state.velocity;
+        state.velocity += force / options.spring.mass * step;
+        state.size += state.velocity * step;
+      }
+      if (Math.abs(state.target - state.size) > 0.02 || Math.abs(state.velocity) > 0.02) moving = true;
+      else { state.size = state.target; state.velocity = 0; }
+      items[index].style.width = items[index].style.height = state.size + 'px';
+    });
+    frame = moving ? requestAnimationFrame(tick) : 0;
+    if (!moving) last = 0;
+  };
+  const animate = () => { if (!frame) frame = requestAnimationFrame(tick); };
+  dock.addEventListener('pointermove', event => {
+    if (event.pointerType === 'touch' || reduced.matches) return;
+    const rect = dock.getBoundingClientRect();
+    // Resting centers prevent resizing from changing the proximity calculation.
+    const style = getComputedStyle(dock);
+    const gap = parseFloat(style.columnGap);
+    const total = items.length * options.baseItemSize + (items.length - 1) * gap;
+    const start = rect.left + (rect.width - total) / 2;
+    states.forEach((state, index) => {
+      const center = start + index * (options.baseItemSize + gap) + options.baseItemSize / 2;
+      const proximity = Math.max(0, 1 - Math.abs(event.clientX - center) / options.distance);
+      state.target = options.baseItemSize + (options.magnification - options.baseItemSize) * proximity;
+    });
+    animate();
+  });
+  const reset = () => { states.forEach(state => { state.target = options.baseItemSize; }); animate(); };
+  dock.addEventListener('pointerleave', reset);
+  dock.addEventListener('focusin', event => {
+    if (reduced.matches) return;
+    states.forEach((state, index) => { state.target = items[index] === event.target ? options.magnification : options.baseItemSize; });
+    animate();
+  });
+  dock.addEventListener('focusout', reset);
+  reduced.addEventListener('change', reset);
+  window.addEventListener('pagehide', () => { cancelAnimationFrame(frame); frame = 0; last = 0; });
+})();
+
