@@ -22,48 +22,53 @@
   }
   const stage = document.querySelector('.name-stage');
   if (stage && !reduced) {
-    const lens = stage.querySelector('.glass-lens');
     const heading = stage.querySelector('h1');
-    const copy = document.createElement('div');
-    copy.className = 'lens-copy';
-    copy.textContent = heading.textContent;
-    lens.appendChild(copy);
-    let active = false;
-    let frame;
-    const place = (x, y) => {
-      const width = lens.offsetWidth;
-      const height = lens.offsetHeight;
-      const scale = 1.45;
-      const rect = heading.getBoundingClientRect();
-      const parent = stage.getBoundingClientRect();
-      lens.style.left = `${x}px`;
-      lens.style.top = `${y}px`;
-      copy.style.width = `${rect.width}px`;
-      copy.style.height = `${rect.height}px`;
-      copy.style.font = getComputedStyle(heading).font;
-      copy.style.letterSpacing = getComputedStyle(heading).letterSpacing;
-      copy.style.transform = `translate(${width / 2 - (x - rect.left + parent.left) * scale}px, ${height / 2 - (y - rect.top + parent.top) * scale}px) scale(${scale})`;
-    };
-    const track = event => {
-      active = true;
-      const rect = stage.getBoundingClientRect();
-      place(event.clientX - rect.left, event.clientY - rect.top);
-    };
-    stage.addEventListener('pointermove', track);
-    stage.addEventListener('pointerdown', track);
-    stage.addEventListener('pointerleave', () => { active = false; });
-    stage.addEventListener('pointerup', event => {
-      if (event.pointerType !== 'mouse') active = false;
+    heading.setAttribute('aria-label', heading.textContent);
+    const words = heading.textContent.trim().split(/\s+/);
+    heading.textContent = '';
+    const letters = [];
+    words.forEach((word, index) => {
+      if (index) heading.appendChild(document.createTextNode(' '));
+      const group = document.createElement('span');
+      group.className = 'name-word';
+      group.setAttribute('aria-hidden', 'true');
+      [...word].forEach(character => {
+        const cell = document.createElement('span');
+        cell.className = 'letter-cell';
+        const glyph = document.createElement('span');
+        glyph.className = 'name-letter';
+        glyph.textContent = character;
+        cell.appendChild(glyph);
+        group.appendChild(cell);
+        letters.push({ cell, glyph });
+      });
+      heading.appendChild(group);
     });
-    const animate = time => {
-      if (!active) {
-        const rect = heading.getBoundingClientRect();
-        const parent = stage.getBoundingClientRect();
-        place(stage.clientWidth * (.5 + .28 * Math.sin(time / 2100)), rect.top - parent.top + rect.height / 2 + 8 * Math.sin(time / 1300));
-      }
-      frame = requestAnimationFrame(animate);
+    let frame = 0;
+    let pointer = null;
+    const update = () => {
+      frame = 0;
+      const radius = Math.min(160, stage.clientWidth * .32);
+      letters.forEach(({cell, glyph}) => {
+        const rect = cell.getBoundingClientRect();
+        const dx = pointer ? rect.left + rect.width / 2 - pointer.x : 0;
+        const dy = pointer ? rect.top + rect.height / 2 - pointer.y : 0;
+        const proximity = pointer ? Math.max(0, 1 - Math.hypot(dx, dy) / radius) : 0;
+        const strength = proximity * proximity * (3 - 2 * proximity);
+        const push = Math.sign(dx) * strength * 7;
+        glyph.style.transform = `translate(${push}px, ${-strength * 9}px) scale(${1 + strength * .22}, ${1 + strength * .42})`;
+      });
     };
-    frame = requestAnimationFrame(animate);
+    const queue = () => { if (!frame) frame = requestAnimationFrame(update); };
+    stage.addEventListener('pointermove', event => {
+      pointer = {x: event.clientX, y: event.clientY};
+      queue();
+    });
+    const reset = () => { pointer = null; queue(); };
+    stage.addEventListener('pointerleave', reset);
+    stage.addEventListener('pointercancel', reset);
+    stage.addEventListener('pointerup', event => { if (event.pointerType === 'touch') reset(); });
+    window.addEventListener('blur', reset);
     window.addEventListener('pagehide', () => cancelAnimationFrame(frame));
   }
   if (!reduced && 'IntersectionObserver' in window) {
