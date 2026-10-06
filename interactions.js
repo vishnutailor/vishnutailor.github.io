@@ -178,54 +178,106 @@
 })();
 
 
-/* Sparse sand streams confined to the outside margins. */
+/* Two miniature, shaded cities revealed by falling sand. */
 (() => {
-  const allowed = window.matchMedia('(min-width: 1100px) and (prefers-reduced-motion: no-preference)');
+  const desktop = matchMedia('(min-width: 1100px)');
+  const reduced = matchMedia('(prefers-reduced-motion: reduce)');
   const canvas = document.createElement('canvas');
   canvas.className = 'side-sand';
   canvas.setAttribute('aria-hidden', 'true');
   const ctx = canvas.getContext('2d');
   if (!ctx) return;
   document.body.appendChild(canvas);
-  let grains = [], frame = 0, last = 0, width = 0, height = 0;
+  let width = 0, height = 0, strip = 0, frame = 0, last = 0, elapsed = 0;
+  let grains = [];
+  const poly = (points, fill, stroke) => {
+    ctx.beginPath(); points.forEach(([x,y], i) => i ? ctx.lineTo(x,y) : ctx.moveTo(x,y)); ctx.closePath();
+    ctx.fillStyle = fill; ctx.fill();
+    if (stroke) {ctx.strokeStyle = stroke; ctx.lineWidth = .6; ctx.stroke();}
+  };
+  const building = (x, y, w, h, depth, seed, night) => {
+    poly([[x,y],[x+w,y],[x+w,y-h],[x,y-h]], '#594631', '#ab8e60');
+    poly([[x+w,y],[x+w+depth,y-depth*.6],[x+w+depth,y-h-depth*.6],[x+w,y-h]], '#302b24', '#7c694d');
+    poly([[x,y-h],[x+depth,y-h-depth*.6],[x+w+depth,y-h-depth*.6],[x+w,y-h]], '#9e8258', '#c3a477');
+    for(let row=0;row<Math.floor((h-8)/10);row++) for(let col=0;col<Math.floor((w-5)/7);col++) {
+      const lit = ((row*7+col*11+seed)%5)<3;
+      ctx.fillStyle = lit && night ? '#e5c88b' : '#332d25';
+      ctx.fillRect(x+4+col*7,y-h+6+row*10,3,4);
+    }
+    for(let row=0;row<Math.floor((h-8)/12);row++) {
+      ctx.fillStyle = row%3===seed%3 && night ? '#bba16d' : '#181b1b';
+      ctx.fillRect(x+w+3,y-h+7+row*12,2,4);
+    }
+    if(seed%3===0) {ctx.strokeStyle='#bea37a';ctx.beginPath();ctx.moveTo(x+w*.55,y-h-2);ctx.lineTo(x+w*.55,y-h-14);ctx.stroke();}
+  };
+  const city = (side, progress) => {
+    ctx.save(); ctx.translate(side ? width-strip : 0,0);
+    ctx.beginPath();ctx.rect(0,height*(1-progress),strip,height*progress);ctx.clip();
+    const center = strip*.5;
+    // A winding vertical avenue links elevated neighborhood terraces.
+    ctx.strokeStyle='#232624';ctx.lineWidth=16;ctx.beginPath();ctx.moveTo(center,height);ctx.lineTo(center-9,height*.7);ctx.lineTo(center+7,height*.4);ctx.lineTo(center-5,0);ctx.stroke();
+    ctx.strokeStyle='#ab916258';ctx.lineWidth=1;ctx.setLineDash([4,9]);ctx.stroke();ctx.setLineDash([]);
+    const levels = Math.ceil(height/145);
+    for(let level=levels-1;level>=0;level--) {
+      const base=height-25-level*145;
+      const top=base-14;
+      poly([[8,base],[strip-18,base-16],[strip-4,base-4],[22,base+12]],'#202422','#5d5844');
+      ctx.strokeStyle='#ac94645c';ctx.setLineDash([3,7]);ctx.beginPath();ctx.moveTo(16,base+1);ctx.lineTo(strip-10,base-10);ctx.stroke();ctx.setLineDash([]);
+      const w=Math.max(19,strip*.19);
+      const h1=side ? 58+(level*17)%53 : 28+(level*13)%37;
+      const h2=side ? 75+(level*19)%44 : 45+(level*11)%30;
+      building(12,top,w,h1,8,level+side*3,elapsed>5);
+      building(strip-w-20,top-9,w,h2,9,level+2+side*7,elapsed>5);
+      if(!side) building(15+w+10,top+10,w*.8,25+(level*9)%20,6,level+4,true);
+      // Street lamps and tiny cars on each cross street.
+      ctx.strokeStyle='#8e7956';ctx.beginPath();ctx.moveTo(strip-9,base-5);ctx.lineTo(strip-9,base-17);ctx.stroke();
+      ctx.fillStyle='#edd6a4';ctx.fillRect(strip-11,base-18,4,2);
+      for(let car=0;car<2;car++) {
+        const t=(elapsed*(.05+car*.012)+level*.23+car*.47)%1;
+        const x=16+t*(strip-32), y=base+2-t*12+car*4;
+        ctx.fillStyle=car ? '#b3b8a5':'#c04532';ctx.fillRect(x,y,7,3);
+        ctx.fillStyle='#f4ddb0';ctx.fillRect(x+6,y,1,2);
+      }
+    }
+    // Cars travelling along the main avenue.
+    for(let i=0;i<5;i++) {
+      const y=(height+ i*height/5-elapsed*19)%height;
+      ctx.fillStyle=i%2?'#b9b6a0':'#c3583e';ctx.fillRect(center-2,y,3,7);
+      ctx.fillStyle='#f3dcad';ctx.fillRect(center-2,y,3,1);
+    }
+    ctx.restore();
+  };
   const resize = () => {
-    width = window.innerWidth; height = window.innerHeight;
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    canvas.width = Math.round(width * dpr); canvas.height = Math.round(height * dpr);
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    const wrap = document.querySelector('.wrap');
-    const bounds = wrap ? wrap.getBoundingClientRect() : {left: 90};
-    const strip = Math.max(12, Math.min(62, bounds.left - 12));
-    grains = Array.from({length: 150}, (_, i) => {
-      const side = i % 2;
-      const lane = Math.floor(Math.random() * 3);
-      const inset = 8 + (lane + .5) * (strip - 8) / 3;
-      return {x: side ? width - inset : inset, y: Math.random() * height, speed: 22 + Math.random() * 38, size: 1 + Math.random() * 1.2, alpha: .32 + Math.random() * .33, phase: Math.random() * Math.PI * 2};
+    width=innerWidth;height=innerHeight;
+    const bounds=document.querySelector('.wrap').getBoundingClientRect();
+    strip=Math.min(145,Math.max(95,bounds.left-12));
+    const ratio=Math.min(devicePixelRatio||1,2);
+    canvas.width=width*ratio;canvas.height=height*ratio;ctx.setTransform(ratio,0,0,ratio,0,0);
+    grains=Array.from({length:180},(_,i)=>({side:i%2,x:8+Math.random()*(strip-16),y:Math.random()*height,speed:45+Math.random()*65,size:.8+Math.random()*1.3}));
+  };
+  const paint = () => {
+    ctx.clearRect(0,0,width,height);
+    const progress=reduced.matches ? 1 : Math.min(1,.06+elapsed/55);
+    city(0,progress);city(1,progress);
+    if(!reduced.matches) grains.forEach(g=>{
+      const floor=height*(1-progress);
+      if(g.y>floor+10) g.y=-Math.random()*150;
+      ctx.fillStyle='rgba(234,213,173,.6)';
+      ctx.fillRect((g.side?width-strip:0)+g.x,g.y,g.size,g.size*1.6);
     });
   };
   const tick = time => {
-    frame = 0;
-    if (!allowed.matches || document.hidden) return;
-    const dt = Math.min((time - (last || time)) / 1000, .05);
-    last = time;
-    ctx.clearRect(0, 0, width, height);
-    grains.forEach(grain => {
-      grain.y += grain.speed * dt;
-      if (grain.y > height + 6) grain.y = -6 - Math.random() * 80;
-      ctx.fillStyle = `rgba(234,213,173,${grain.alpha})`;
-      const drift = Math.sin(time / 2200 + grain.phase) * 2;
-      ctx.fillRect(grain.x + drift, grain.y, grain.size, grain.size * 1.8);
-    });
-    frame = requestAnimationFrame(tick);
+    frame=0;if(document.hidden||!desktop.matches)return;
+    const dt=Math.min((time-(last||time))/1000,.05);last=time;elapsed+=dt;
+    grains.forEach(g=>g.y+=g.speed*dt);paint();
+    frame=requestAnimationFrame(tick);
   };
   const sync = () => {
-    cancelAnimationFrame(frame); frame = 0; last = 0;
-    canvas.hidden = !allowed.matches;
-    if (allowed.matches && !document.hidden) { resize(); frame = requestAnimationFrame(tick); }
+    cancelAnimationFrame(frame);frame=0;last=0;canvas.hidden=!desktop.matches;
+    if(!desktop.matches||document.hidden)return;
+    resize();paint();if(!reduced.matches)frame=requestAnimationFrame(tick);
   };
-  allowed.addEventListener('change', sync);
-  window.addEventListener('resize', sync);
-  document.addEventListener('visibilitychange', sync);
-  window.addEventListener('pagehide', () => cancelAnimationFrame(frame));
-  sync();
+  desktop.addEventListener('change',sync);reduced.addEventListener('change',sync);
+  addEventListener('resize',sync);document.addEventListener('visibilitychange',sync);
+  addEventListener('pagehide',()=>cancelAnimationFrame(frame));sync();
 })();
