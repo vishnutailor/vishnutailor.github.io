@@ -196,11 +196,11 @@
     const wrap = document.querySelector('.wrap');
     const bounds = wrap ? wrap.getBoundingClientRect() : {left: 90};
     const strip = Math.max(12, Math.min(62, bounds.left - 12));
-    grains = Array.from({length: 90}, (_, i) => {
+    grains = Array.from({length: 150}, (_, i) => {
       const side = i % 2;
       const lane = Math.floor(Math.random() * 3);
       const inset = 8 + (lane + .5) * (strip - 8) / 3;
-      return {x: side ? width - inset : inset, y: Math.random() * height, speed: 22 + Math.random() * 38, size: .6 + Math.random() * 1.1, alpha: .09 + Math.random() * .21, phase: Math.random() * Math.PI * 2};
+      return {x: side ? width - inset : inset, y: Math.random() * height, speed: 22 + Math.random() * 38, size: 1 + Math.random() * 1.2, alpha: .32 + Math.random() * .33, phase: Math.random() * Math.PI * 2};
     });
   };
   const tick = time => {
@@ -212,7 +212,7 @@
     grains.forEach(grain => {
       grain.y += grain.speed * dt;
       if (grain.y > height + 6) grain.y = -6 - Math.random() * 80;
-      ctx.fillStyle = `rgba(220,196,151,${grain.alpha})`;
+      ctx.fillStyle = `rgba(234,213,173,${grain.alpha})`;
       const drift = Math.sin(time / 2200 + grain.phase) * 2;
       ctx.fillRect(grain.x + drift, grain.y, grain.size, grain.size * 1.8);
     });
