@@ -177,3 +177,55 @@
   window.addEventListener('pagehide', () => { cancelAnimationFrame(frame); frame = 0; last = 0; });
 })();
 
+
+/* Sparse sand streams confined to the outside margins. */
+(() => {
+  const allowed = window.matchMedia('(min-width: 1100px) and (prefers-reduced-motion: no-preference)');
+  const canvas = document.createElement('canvas');
+  canvas.className = 'side-sand';
+  canvas.setAttribute('aria-hidden', 'true');
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return;
+  document.body.appendChild(canvas);
+  let grains = [], frame = 0, last = 0, width = 0, height = 0;
+  const resize = () => {
+    width = window.innerWidth; height = window.innerHeight;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width = Math.round(width * dpr); canvas.height = Math.round(height * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    const wrap = document.querySelector('.wrap');
+    const bounds = wrap ? wrap.getBoundingClientRect() : {left: 90};
+    const strip = Math.max(12, Math.min(62, bounds.left - 12));
+    grains = Array.from({length: 90}, (_, i) => {
+      const side = i % 2;
+      const lane = Math.floor(Math.random() * 3);
+      const inset = 8 + (lane + .5) * (strip - 8) / 3;
+      return {x: side ? width - inset : inset, y: Math.random() * height, speed: 22 + Math.random() * 38, size: .6 + Math.random() * 1.1, alpha: .09 + Math.random() * .21, phase: Math.random() * Math.PI * 2};
+    });
+  };
+  const tick = time => {
+    frame = 0;
+    if (!allowed.matches || document.hidden) return;
+    const dt = Math.min((time - (last || time)) / 1000, .05);
+    last = time;
+    ctx.clearRect(0, 0, width, height);
+    grains.forEach(grain => {
+      grain.y += grain.speed * dt;
+      if (grain.y > height + 6) grain.y = -6 - Math.random() * 80;
+      ctx.fillStyle = `rgba(220,196,151,${grain.alpha})`;
+      const drift = Math.sin(time / 2200 + grain.phase) * 2;
+      ctx.fillRect(grain.x + drift, grain.y, grain.size, grain.size * 1.8);
+    });
+    frame = requestAnimationFrame(tick);
+  };
+  const sync = () => {
+    cancelAnimationFrame(frame); frame = 0; last = 0;
+    canvas.hidden = !allowed.matches;
+    if (allowed.matches && !document.hidden) { resize(); frame = requestAnimationFrame(tick); }
+  };
+  allowed.addEventListener('change', sync);
+  window.addEventListener('resize', sync);
+  document.addEventListener('visibilitychange', sync);
+  window.addEventListener('pagehide', () => cancelAnimationFrame(frame));
+  sync();
+})();
