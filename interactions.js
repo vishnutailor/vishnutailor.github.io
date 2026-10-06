@@ -21,55 +21,88 @@
     window.addEventListener('blur', hide);
   }
   const stage = document.querySelector('.name-stage');
-  if (stage && !reduced) {
+  if (stage) {
     const heading = stage.querySelector('h1');
-    heading.setAttribute('aria-label', heading.textContent);
-    const words = heading.textContent.trim().split(/\s+/);
-    heading.textContent = '';
-    const letters = [];
-    words.forEach((word, index) => {
-      if (index) heading.appendChild(document.createTextNode(' '));
-      const group = document.createElement('span');
-      group.className = 'name-word';
-      group.setAttribute('aria-hidden', 'true');
-      [...word].forEach(character => {
-        const cell = document.createElement('span');
-        cell.className = 'letter-cell';
-        const glyph = document.createElement('span');
-        glyph.className = 'name-letter';
-        glyph.textContent = character;
-        cell.appendChild(glyph);
-        group.appendChild(cell);
-        letters.push({ cell, glyph });
-      });
-      heading.appendChild(group);
-    });
-    let frame = 0;
-    let pointer = null;
-    const update = () => {
-      frame = 0;
-      const radius = Math.min(160, stage.clientWidth * .32);
-      letters.forEach(({cell, glyph}) => {
-        const rect = cell.getBoundingClientRect();
-        const dx = pointer ? rect.left + rect.width / 2 - pointer.x : 0;
-        const dy = pointer ? rect.top + rect.height / 2 - pointer.y : 0;
-        const proximity = pointer ? Math.max(0, 1 - Math.hypot(dx, dy) / radius) : 0;
-        const strength = proximity * proximity * (3 - 2 * proximity);
-        const push = Math.sign(dx) * strength * 7;
-        glyph.style.transform = `translate(${push}px, ${-strength * 9}px) scale(${1 + strength * .22}, ${1 + strength * .42})`;
-      });
-    };
-    const queue = () => { if (!frame) frame = requestAnimationFrame(update); };
-    stage.addEventListener('pointermove', event => {
-      pointer = {x: event.clientX, y: event.clientY};
-      queue();
-    });
-    const reset = () => { pointer = null; queue(); };
-    stage.addEventListener('pointerleave', reset);
-    stage.addEventListener('pointercancel', reset);
-    stage.addEventListener('pointerup', event => { if (event.pointerType === 'touch') reset(); });
-    window.addEventListener('blur', reset);
-    window.addEventListener('pagehide', () => cancelAnimationFrame(frame));
+    const canvas = document.createElement('canvas');
+    canvas.className = 'sand-name';
+    canvas.setAttribute('aria-hidden', 'true');
+    const context = canvas.getContext('2d');
+    if (context) {
+      stage.appendChild(canvas);
+      let grains = [], pointer = null, frame = 0, width = 0, height = 0;
+      const colors = ['#eadfc9', '#d6bd94', '#f2e7d2', '#bda079'];
+      const draw = () => {
+        frame = 0;
+        context.clearRect(0, 0, width, height);
+        let moving = false;
+        const radius = Math.min(100, width * .2);
+        grains.forEach(grain => {
+          const dx = pointer ? grain.homeX - pointer.x : 0;
+          const dy = pointer ? grain.homeY - pointer.y : 0;
+          const distance = Math.hypot(dx, dy);
+          const influence = pointer ? Math.max(0, 1 - distance / radius) : 0;
+          const spread = influence * influence * 48;
+          const angle = distance > .1 ? Math.atan2(dy, dx) : grain.angle;
+          const targetX = grain.homeX + Math.cos(angle) * spread;
+          const targetY = grain.homeY + Math.sin(angle) * spread;
+          grain.x += (targetX - grain.x) * .16;
+          grain.y += (targetY - grain.y) * .16;
+          if (Math.abs(targetX - grain.x) + Math.abs(targetY - grain.y) > .08) moving = true;
+          context.fillStyle = colors[grain.color];
+          context.fillRect(grain.x, grain.y, grain.size, grain.size);
+        });
+        if (moving) frame = requestAnimationFrame(draw);
+      };
+      const queue = () => { if (!frame) frame = requestAnimationFrame(draw); };
+      const build = () => {
+        width = stage.clientWidth;
+        height = stage.clientHeight;
+        const ratio = Math.min(window.devicePixelRatio || 1, 2);
+        canvas.width = Math.round(width * ratio);
+        canvas.height = Math.round(height * ratio);
+        context.setTransform(ratio, 0, 0, ratio, 0, 0);
+        const mask = document.createElement('canvas');
+        mask.width = width; mask.height = height;
+        const ink = mask.getContext('2d', {willReadFrequently: true});
+        let size = Math.min(104, width * .13);
+        ink.font = `600 ${size}px "Courier New", monospace`;
+        const text = heading.textContent.trim();
+        const available = width - 32;
+        if (ink.measureText(text).width > available) size *= available / ink.measureText(text).width;
+        ink.font = `600 ${size}px "Courier New", monospace`;
+        ink.textAlign = 'center'; ink.textBaseline = 'middle'; ink.fillStyle = '#fff';
+        ink.fillText(text, width / 2, height / 2);
+        const pixels = ink.getImageData(0, 0, width, height).data;
+        grains = [];
+        const step = width < 500 ? 1.6 : 2;
+        for (let y = 0; y < height; y += step) {
+          for (let x = 0; x < width; x += step) {
+            if (pixels[(Math.floor(y) * width + Math.floor(x)) * 4 + 3] < 100) continue;
+            const homeX = x + (Math.random() - .5) * .7;
+            const homeY = y + (Math.random() - .5) * .7;
+            grains.push({homeX, homeY, x: homeX, y: homeY, size: .7 + Math.random() * .8, color: Math.floor(Math.random() * colors.length), angle: Math.random() * Math.PI * 2});
+          }
+        }
+        stage.classList.add('sand-ready');
+        queue();
+      };
+      if (!reduced) {
+        stage.addEventListener('pointermove', event => {
+          const rect = stage.getBoundingClientRect();
+          pointer = {x: event.clientX - rect.left, y: event.clientY - rect.top};
+          queue();
+        });
+        const reset = () => { pointer = null; queue(); };
+        stage.addEventListener('pointerleave', reset);
+        stage.addEventListener('pointercancel', reset);
+        stage.addEventListener('pointerup', event => { if (event.pointerType === 'touch') reset(); });
+        window.addEventListener('blur', reset);
+      }
+      build();
+      if ('ResizeObserver' in window) new ResizeObserver(build).observe(stage);
+      else window.addEventListener('resize', build);
+      window.addEventListener('pagehide', () => cancelAnimationFrame(frame));
+    }
   }
   if (!reduced && 'IntersectionObserver' in window) {
     const observer = new IntersectionObserver(entries => {
