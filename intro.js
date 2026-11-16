@@ -14,17 +14,17 @@
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   if (reduceMotion) { root.classList.remove('intro-active'); return; }
 
-  const CFG = {
-  source: 'videoplayback.mp4',
-  videoGoalSecond: 6.65,
-  playOnlyOncePerTab: true,
-  storySeconds: 6.65,
-  freezeSeconds: 0.38,
-  blastSeconds: 0.72,
-  assembleSeconds: 1.45,
-  revealSeconds: 0.85,
-  videoWaitMs: 1000
-};
+    const CFG = {
+    source: 'videoplayback.mp4',
+    videoGoalSecond: 6.65,
+    playOnlyOncePerTab: true,
+    storySeconds: 6.65,
+    freezeSeconds: 0.38,
+    blastSeconds: 0.72,
+    assembleSeconds: 1.45,
+    revealSeconds: 0.85,
+    videoWaitMs: 1000
+  };
   const W0 = 960, H0 = 540;
   const storyEnd = CFG.storySeconds;
   const freezeEnd = storyEnd + CFG.freezeSeconds;
