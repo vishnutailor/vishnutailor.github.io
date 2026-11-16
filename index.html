@@ -7,6 +7,25 @@
   <link rel="icon" type="image/png" href="favicon.png" />
   <meta name="description" content="Personal website of Vishnu Tailor" />
   <link rel="stylesheet" href="style.css?v=12" />
+<!-- Clean centered layout -->
+<script>
+  document.documentElement.classList.add('vt-clean');
+</script>
+<link rel="stylesheet" href="site-panel.css?v=2" />
+
+<!-- Neymar goal intro -->
+<script>
+  try {
+    if (!sessionStorage.getItem('vt-goal-intro') &&
+        !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      document.documentElement.classList.add('intro-active');
+    }
+  } catch (_) {
+    document.documentElement.classList.add('intro-active');
+  }
+</script>
+<link rel="stylesheet" href="intro.css?v=2" />
+<script src="intro.js?v=2" defer></script>
 </head>
 <body>
   <div class="wrap">
