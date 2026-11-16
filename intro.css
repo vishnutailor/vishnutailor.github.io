@@ -1,0 +1,62 @@
+/* The intro is present ONLY on the homepage. It runs before other content is shown. */
+html.intro-active,
+html.intro-active body { overflow: hidden !important; }
+
+html.intro-active .wrap,
+html.intro-active nav.dock-panel {
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+html.intro-revealing .wrap,
+html.intro-revealing nav.dock-panel {
+  opacity: 1 !important;
+  transition: opacity .8s ease-out !important;
+}
+
+#neymar-intro {
+  position: fixed;
+  inset: 0;
+  z-index: 100000;
+  background: #020202;
+  overflow: hidden;
+  user-select: none;
+  touch-action: none;
+  opacity: 1;
+}
+
+#neymar-intro canvas {
+  position: absolute;
+  inset: 0;
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+#neymar-intro.is-fading { opacity: 0; transition: opacity .9s ease-out; }
+
+#neymar-intro .intro-skip {
+  appearance: none;
+  position: absolute;
+  right: max(24px, env(safe-area-inset-right));
+  bottom: max(25px, env(safe-area-inset-bottom));
+  padding: 7px 1px;
+  background: none;
+  border: 0;
+  color: #ddd;
+  font: 10px/1.1 'Courier New', monospace;
+  letter-spacing: .22em;
+  text-transform: uppercase;
+  opacity: .5;
+  cursor: pointer;
+  transition: opacity .2s;
+}
+#neymar-intro .intro-skip:hover,
+#neymar-intro .intro-skip:focus-visible { opacity: 1; outline-offset: 6px; }
+
+@media (prefers-reduced-motion: reduce) {
+  #neymar-intro { display: none !important; }
+  html.intro-active .wrap,
+  html.intro-active nav.dock-panel { opacity: 1 !important; pointer-events: auto !important; }
+  html.intro-active, html.intro-active body { overflow: auto !important; }
+}
