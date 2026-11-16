@@ -21,7 +21,7 @@
     window.addEventListener('blur', hide);
   }
   const stage = document.querySelector('.name-stage');
-  if (stage) {
+  if (stage && !document.documentElement.classList.contains('vt-clean')) {
     const heading = stage.querySelector('h1');
     const canvas = document.createElement('canvas');
     canvas.className = 'sand-name';
