@@ -15,16 +15,16 @@
   if (reduceMotion) { root.classList.remove('intro-active'); return; }
 
   const CFG = {
-    source: 'assets/neymar-goal.mp4',
-    videoGoalSecond: 5.05,
-    playOnlyOncePerTab: true,
-    storySeconds: 5.4,
-    freezeSeconds: 0.24,
-    blastSeconds: 0.48,
-    assembleSeconds: 0.78,
-    revealSeconds: 0.48,
-    videoWaitMs: 650
-  };
+  source: 'videoplayback.mp4',
+  videoGoalSecond: 6.65,
+  playOnlyOncePerTab: true,
+  storySeconds: 6.65,
+  freezeSeconds: 0.38,
+  blastSeconds: 0.72,
+  assembleSeconds: 1.45,
+  revealSeconds: 0.85,
+  videoWaitMs: 1000
+};
   const W0 = 960, H0 = 540;
   const storyEnd = CFG.storySeconds;
   const freezeEnd = storyEnd + CFG.freezeSeconds;
