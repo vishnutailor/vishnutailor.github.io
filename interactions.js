@@ -180,6 +180,7 @@
 
 /* Sparse sand streams confined to the outside margins. */
 (() => {
+  if (document.documentElement.classList.contains('vt-clean')) return;
   const allowed = window.matchMedia('(min-width: 1100px) and (prefers-reduced-motion: no-preference)');
   const canvas = document.createElement('canvas');
   canvas.className = 'side-sand';
