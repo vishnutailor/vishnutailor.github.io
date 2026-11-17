@@ -7,26 +7,17 @@
   <meta name="description" content="Vishnu Tailor — Economics at UC San Diego, competitions, experience, and interests.">
   <title>Vishnu Tailor</title>
   <link rel="icon" type="image/png" href="favicon.png">
-  <link rel="stylesheet" href="vishnu-site-v3.css?v=3">
-  <script src="vishnu-site-v3.js?v=3" defer></script>
+  <link rel="stylesheet" href="vishnu-wave.css?v=4">
+  <script src="vishnu-wave.js?v=4" defer></script>
 </head>
 <body>
-  <!-- The full-screen canvas has no visible box or stadium backdrop. -->
+  <!-- A single automatic full-screen wave reveals the portfolio. -->
   <canvas id="transition-canvas" aria-hidden="true"></canvas>
-  <button id="skip-intro" type="button" aria-label="Skip Neymar animation">skip intro</button>
-
-  <!-- After the goal, every remaining dot converges into this central circle, then the site opens on its own. -->
-  <section id="circle-screen" aria-label="Enter Vishnu Tailor's website" hidden>
-    <div id="enter-circle" aria-hidden="true">
-      <span class="circle-disc" aria-hidden="true"></span>
-    </div>
-  </section>
 
   <div class="page-viewport">
-    <main id="website" class="website" aria-hidden="true">
+    <main id="website" class="website">
       <header class="masthead">
         <h1>Vishnu Tailor</h1>
-        <p class="subtitle">(thanks for watching one of my all-time favorite Neymar goals.)</p>
       </header>
 
       <nav class="section-nav" aria-label="Website sections" role="tablist">
@@ -88,6 +79,6 @@
       </footer>
     </main>
   </div>
-  <noscript><style>#transition-canvas,#skip-intro,#circle-screen{display:none!important}.website{opacity:1!important;visibility:visible!important;pointer-events:auto!important}</style></noscript>
+  <noscript><style>#transition-canvas{display:none!important}</style></noscript>
 </body>
 </html>
