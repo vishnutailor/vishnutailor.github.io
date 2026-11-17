@@ -7,33 +7,26 @@
   <meta name="description" content="Vishnu Tailor — Economics at UC San Diego, competitions, experience, and interests.">
   <title>Vishnu Tailor</title>
   <link rel="icon" type="image/png" href="favicon.png">
-  <link rel="stylesheet" href="vishnu-site-v2.css?v=2">
-<script src="vishnu-site-v2.js?v=2" defer></script>
+  <link rel="stylesheet" href="vishnu-site-v3.css?v=3">
+  <script src="vishnu-site-v3.js?v=3" defer></script>
 </head>
 <body>
   <!-- The full-screen canvas has no visible box or stadium backdrop. -->
   <canvas id="transition-canvas" aria-hidden="true"></canvas>
   <button id="skip-intro" type="button" aria-label="Skip Neymar animation">skip intro</button>
 
-  <!-- After the goal, every remaining dot converges into this central circle. -->
+  <!-- After the goal, every remaining dot converges into this central circle, then the site opens on its own. -->
   <section id="circle-screen" aria-label="Enter Vishnu Tailor's website" hidden>
-    <button id="enter-circle" type="button" aria-label="Click to enter Vishnu Tailor's website">
+    <div id="enter-circle" aria-hidden="true">
       <span class="circle-disc" aria-hidden="true"></span>
-      <span class="circle-arrow" aria-hidden="true">
-        <svg width="36" height="92" viewBox="0 0 36 92" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M18 89V10" stroke="white" stroke-width="2.1"/>
-          <path d="M18 2L2 31L18 25L34 31L18 2Z" fill="white"/>
-        </svg>
-      </span>
-      <span class="circle-prompt">click me</span>
-    </button>
+    </div>
   </section>
 
   <div class="page-viewport">
     <main id="website" class="website" aria-hidden="true">
       <header class="masthead">
         <h1>Vishnu Tailor</h1>
-        <p class="subtitle">(thanks for watching (or skipping) one of my all-time favorite Neymar goals.)</p>
+        <p class="subtitle">(thanks for watching one of my all-time favorite Neymar goals.)</p>
       </header>
 
       <nav class="section-nav" aria-label="Website sections" role="tablist">
