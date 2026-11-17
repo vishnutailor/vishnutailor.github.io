@@ -1,136 +1,100 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#000000">
+  <meta name="description" content="Vishnu Tailor — Economics at UC San Diego, competitions, experience, and interests.">
   <title>Vishnu Tailor</title>
-  <link rel="icon" type="image/png" href="favicon.png" />
-  <meta name="description" content="Personal website of Vishnu Tailor" />
-  <link rel="stylesheet" href="style.css?v=12" />
-<!-- Clean centered layout -->
-<script>
-  document.documentElement.classList.add('vt-clean');
-</script>
-<link rel="stylesheet" href="site-panel.css?v=2" />
-
-<!-- Neymar goal intro -->
-<script>
-  try {
-    if (!sessionStorage.getItem('vt-goal-intro') &&
-        !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      document.documentElement.classList.add('intro-active');
-    }
-  } catch (_) {
-    document.documentElement.classList.add('intro-active');
-  }
-</script>
-<link rel="stylesheet" href="intro.css?v=2" />
-<script src="intro-v7.js?v=7" defer></script>
+  <link rel="icon" type="image/png" href="favicon.png">
+  <link rel="stylesheet" href="vishnu-site.css?v=1">
+  <script src="vishnu-site.js?v=1" defer></script>
 </head>
 <body>
-  <div class="wrap">
-<section class="hero" aria-label="Introduction">
-      <div class="name-stage">
+  <!-- The full-screen canvas has no visible box or stadium backdrop. -->
+  <canvas id="transition-canvas" aria-hidden="true"></canvas>
+  <button id="skip-intro" type="button" aria-label="Skip Neymar animation">skip intro</button>
+
+  <!-- After the goal, every remaining dot converges into this central circle. -->
+  <section id="circle-screen" aria-label="Enter Vishnu Tailor's website" hidden>
+    <button id="enter-circle" type="button" aria-label="Click to enter Vishnu Tailor's website">
+      <span class="circle-disc" aria-hidden="true"></span>
+      <span class="circle-arrow" aria-hidden="true">
+        <svg width="36" height="92" viewBox="0 0 36 92" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M18 89V10" stroke="white" stroke-width="2.1"/>
+          <path d="M18 2L2 31L18 25L34 31L18 2Z" fill="white"/>
+        </svg>
+      </span>
+      <span class="circle-prompt">click me</span>
+    </button>
+  </section>
+
+  <div class="page-viewport">
+    <main id="website" class="website" aria-hidden="true">
+      <header class="masthead">
         <h1>Vishnu Tailor</h1>
-      </div>
-      <div class="race-track" aria-hidden="true">
-        <div class="race-car">
-          <svg viewBox="0 0 120 36" xmlns="http://www.w3.org/2000/svg">
-            <g fill="#e52222">
-              <path d="M12 11h7v15h-7zM8 9h16v4H8z"/>
-              <path d="M20 23 37 18h13l10-8h13l7 8 24 5 8 5H20z"/>
-              <path d="M102 24h11v7H98v-4zM94 29h23v3H94z"/>
-            </g>
-            <path d="M53 18 62 12h8l6 6M58 16h15" fill="none" stroke="#121212" stroke-width="2.5"/>
-            <path d="M29 24h22M76 23l20 3" stroke="#ff5a45" stroke-width="2"/>
-            <path d="M45 19h5v5h-5zM9 10h14v2H9z" fill="#ffcf31"/>
-            <path d="M64 11h6v4h-6z" fill="#ffcf31"/>
-            <g fill="#080808" stroke="#454545" stroke-width="1.5">
-              <circle cx="33" cy="27" r="8"/><circle cx="88" cy="28" r="7"/>
-            </g>
-            <g fill="none" stroke="#ffcf31" stroke-width=".8"><circle cx="33" cy="27" r="6"/><circle cx="88" cy="28" r="5"/></g>
-            <g fill="#8c8c8c"><circle cx="33" cy="27" r="2.5"/><circle cx="88" cy="28" r="2.2"/></g>
-          </svg>
-        </div>
-      </div>
-      <div class="hero-bottom">
-        <p class="tagline">Freshman at UC San Diego studying economics, interested in finance, entrepreneurship, and competitive problem solving.</p>
-        <img src="headshot.jpg" alt="Vishnu Tailor headshot" class="headshot" />
-      </div>
-    </section>
+        <p class="subtitle">(thanks for watching one of my all-time favorite Neymar goals.)</p>
+      </header>
 
-    <section class="grid">
-      <div>
-        <div class="section-title">Work</div>
+      <nav class="section-nav" aria-label="Website sections" role="tablist">
+        <button id="tab-about" class="section-tab" type="button" role="tab" aria-controls="panel-about" aria-selected="false" tabindex="0" data-section="about">About me</button>
+        <button id="tab-competitions" class="section-tab" type="button" role="tab" aria-controls="panel-competitions" aria-selected="false" tabindex="-1" data-section="competitions">Competitions</button>
+        <button id="tab-experience" class="section-tab" type="button" role="tab" aria-controls="panel-experience" aria-selected="false" tabindex="-1" data-section="experience">Experience</button>
+        <button id="tab-interests" class="section-tab" type="button" role="tab" aria-controls="panel-interests" aria-selected="false" tabindex="-1" data-section="interests">Interests</button>
+      </nav>
 
-        <div class="item">
-          <div class="year">'26 →</div>
-          <div>
-            <h3>Bank of America Internship</h3>
-            <p>Summer intern</p>
-          </div>
-        </div>
+      <div id="section-stage" class="section-stage" aria-live="polite">
+        <section id="panel-about" class="section-pane" role="tabpanel" aria-labelledby="tab-about" hidden>
+          <p class="about-copy">Hey, I'm Vishnu! I'm a freshman at UC San Diego studying Economics with interests in finance, consulting, and entrepreneurship. I love meeting new people, exploring new ideas, and trying new things. Outside of that, you'll probably find me playing or watching soccer, traveling, hanging out with friends, or ending up on some random side quest.</p>
+        </section>
 
-        <div class="item">
-          <div class="year">'25 →</div>
-          <div>
-            <h3>CliftonLarsonAllen</h3>
-            <p>Summer intern</p>
-          </div>
-        </div>
-
-        <div class="item">
-          <div class="year">'25 →</div>
-          <div>
-            <h3>Brooklyn Youth Charitable Investment Group</h3>
-            <p>Investment Analyst</p>
-          </div>
-        </div>
-      </div>
-
-      <div>
-        <div class="section-title">Competitions</div>
-
-        <div class="item">
-          <div class="year">M3</div>
-          <div>
-            <h3>MathWorks Math Modeling Challenge</h3>
+        <section id="panel-competitions" class="section-pane" role="tabpanel" aria-labelledby="tab-competitions" hidden>
+          <div class="competition-entry">
+            <h2><span class="display-link">MathWorks Math Modeling Challenge</span></h2>
             <p>National runner up • finalist team out of more than 770 teams</p>
           </div>
-        </div>
-
-        <div class="item">
-          <div class="year">Quiz Bowl</div>
-          <div>
-            <h3>Harvard Crimson Global Quiz Bowl for Economics and Business</h3>
+          <div class="competition-entry">
+            <h2><span class="display-link">Harvard Crimson Global Quiz Bowl for Economics and Business</span></h2>
             <p>3rd place worldwide • U.S. champion • team competition</p>
           </div>
-        </div>
-
-        <div class="item">
-          <div class="year">Paper</div>
-          <div>
-            <h3><a href="papers.html">M3 final paper</a></h3>
-            <p>View the paper and competition writeup</p>
+          <div class="competition-entry paper-entry">
+            <h2><a href="m3-paper.pdf" target="_blank" rel="noopener noreferrer">M3 final paper</a></h2>
+            <p><em>View the paper and competition writeup</em></p>
           </div>
-        </div>
+        </section>
+
+        <section id="panel-experience" class="section-pane" role="tabpanel" aria-labelledby="tab-experience" hidden>
+          <div class="experience-entry">
+            <span class="experience-year">'26 →</span>
+            <div><h2>Bank of America Internship</h2><p>Summer intern</p></div>
+          </div>
+          <div class="experience-entry">
+            <span class="experience-year">'25 →</span>
+            <div><h2>CliftonLarsonAllen</h2><p>Summer intern</p></div>
+          </div>
+          <div class="experience-entry">
+            <span class="experience-year">'25 →</span>
+            <div><h2>Brooklyn Youth Charitable Investment Group</h2><p>Investment Analyst</p></div>
+          </div>
+        </section>
+
+        <section id="panel-interests" class="section-pane" role="tabpanel" aria-labelledby="tab-interests" hidden>
+          <div class="interests-gallery">
+            <figure><img src="travel.jpg" alt="Friends" loading="lazy"><figcaption>Friends</figcaption></figure>
+            <figure><img src="soccer.jpg" alt="Soccer" loading="lazy"><figcaption>Soccer</figcaption></figure>
+            <figure><img src="formula1.jpg" alt="Formula 1" loading="lazy"><figcaption>Formula 1</figcaption></figure>
+            <figure><img src="travel2.jpg" alt="Travel" loading="lazy"><figcaption>Travel</figcaption></figure>
+          </div>
+        </section>
       </div>
-    </section>
 
-    <footer>
-      <a href="mailto:30vishnu.tailor@gmail.com">30vishnu.tailor@gmail.com</a>
-      <a href="https://www.linkedin.com/in/vishnu-tailor30" target="_blank" rel="noopener noreferrer">LinkedIn</a>
-    </footer>
+      <div class="lower-rule" aria-hidden="true"></div>
+      <footer class="contact-links">
+        <a href="https://www.linkedin.com/in/vishnu-tailor30" target="_blank" rel="noopener noreferrer">linkedin</a>
+        <a href="mailto:30vishnu.tailor@gmail.com">email</a>
+      </footer>
+    </main>
   </div>
-
-  <nav class="dock-panel" aria-label="Quick navigation">
-    <a class="dock-item current" href="index.html" aria-label="Home" aria-current="page"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 10 9-7 9 7v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z"/></svg><span class="dock-label">Home</span></a>
-    <a class="dock-item" href="interests.html" aria-label="Interests"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1.1-1.1a5.5 5.5 0 0 0-7.8 7.8L12 21l8.8-8.6a5.5 5.5 0 0 0 0-7.8z"/></svg><span class="dock-label">Interests</span></a>
-    <a class="dock-item" href="papers.html" aria-label="Papers"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h6"/></svg><span class="dock-label">Papers</span></a>
-    <a class="dock-item" href="mailto:30vishnu.tailor@gmail.com" aria-label="Email"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 6 9 7 9-7"/></svg><span class="dock-label">Email</span></a>
-    <a class="dock-item" href="https://www.linkedin.com/in/vishnu-tailor30" aria-label="LinkedIn" target="_blank" rel="noopener noreferrer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M7 10v7M7 7v.01M11 17v-7M11 13a3 3 0 0 1 6 0v4"/></svg><span class="dock-label">LinkedIn</span></a>
-  </nav>
-  <script src="interactions.js?v=12" defer></script>
+  <noscript><style>#transition-canvas,#skip-intro,#circle-screen{display:none!important}.website{opacity:1!important;visibility:visible!important;pointer-events:auto!important}</style></noscript>
 </body>
 </html>
-
