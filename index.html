@@ -4,81 +4,464 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#000000">
-  <meta name="description" content="Vishnu Tailor — Economics at UC San Diego, competitions, experience, and interests.">
+  <meta name="description" content="Vishnu Tailor — Economics at UC San Diego, experience, competitions, and favorites.">
   <title>Vishnu Tailor</title>
   <link rel="icon" type="image/png" href="favicon.png?v=2">
-  <link rel="stylesheet" href="vishnu-wave.css?v=4">
-  <script src="vishnu-wave.js?v=4" defer></script>
+  <style>
+    :root {
+      color-scheme: dark;
+      --white: #f3f3f3;
+      --muted: #d2d2d2;
+      --site-width: 800px;
+    }
+    *, *::before, *::after { box-sizing: border-box; }
+    html { min-height: 100%; background: #000; scroll-behavior: smooth; }
+    body { margin: 0; min-height: 100vh; color: var(--white); background: #000; font: 400 15px/1.45 'Times New Roman', Times, serif; -webkit-font-smoothing: antialiased; }
+    button, a { font: inherit; -webkit-tap-highlight-color: transparent; }
+    button { color: inherit; }
+    a { color: inherit; }
+    [hidden] { display: none !important; }
+    button:focus-visible, a:focus-visible, .favorite-scroll:focus-visible { outline: 1px solid #fff; outline-offset: 4px; }
+
+    /* Preserve the original single automatic wave that reveals the page. */
+    #transition-canvas {
+      position: fixed; inset: 0; width: 100%; height: 100%; z-index: 50;
+      background: #000; pointer-events: none;
+      animation: wave-failsafe 3.6s step-end forwards;
+    }
+    @keyframes wave-failsafe { to { visibility: hidden; } }
+
+    /* The text sizes, serif typography, spacing, and monochrome look remain consistent. */
+    .page-viewport { min-height: 100svh; display: grid; place-items: center; padding: 58px 22px 67px; }
+    .website { width: min(var(--site-width), 100%); margin: 0 auto; text-align: center; opacity: 1; visibility: visible; }
+    body.wave-active .website { pointer-events: none; }
+    .masthead h1 { margin: 0; font-size: clamp(31px, 3.15vw, 37px); font-weight: 400; line-height: 1.1; letter-spacing: -.012em; }
+    .section-nav { width: min(680px,100%); margin: 28px auto 0; display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 10px; align-items: center; }
+    .section-tab { appearance: none; border: 0; background: none; color: var(--white); cursor: pointer; font-size: clamp(15px,1.5vw,17.5px); line-height: 1.2; font-weight: 400; text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; white-space: nowrap; padding: 3px 0; transition: opacity .2s ease; }
+    .section-tab:hover, .favorite-category:hover { opacity: .68; }
+    .section-tab[aria-selected="true"] { text-decoration-thickness: 1.4px; }
+    .section-stage { height: 0; position: relative; overflow: hidden; transition: height .65s cubic-bezier(.22,1,.36,1); }
+    .section-pane { position: absolute; top: 0; left: 0; width: 100%; padding: 27px 0 7px; opacity: 0; transform: translateY(6px); transition: opacity .4s ease,transform .52s ease; }
+    .section-pane.is-visible { opacity: 1; transform: translateY(0); }
+    .section-pane h2, .section-pane p { margin: 0; font-size: 14px; line-height: 1.42; font-weight: 400; }
+    .about-copy { max-width: 590px; margin: 0 auto !important; font-size: 14.75px !important; line-height: 1.46 !important; }
+
+    /* One unified experience section, three centered rows in each column. */
+    .experience-top-rule { width: min(650px,92%); height: 1px; margin: 0 auto 30px; background: #a7a7a7; }
+    .experience-grid { width: 100%; display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); column-gap: clamp(25px,5vw,76px); text-align: center; align-items: start; }
+    .experience-column { min-width: 0; display: flex; flex-direction: column; gap: 27px; }
+    .experience-item { min-width: 0; text-align: center; }
+    .experience-item h2 { font-size: 15px; line-height: 1.34; font-weight: 400; text-wrap: balance; }
+    .experience-item .experience-role { font-size: 14px; line-height: 1.43; color: var(--white); }
+    .experience-item .experience-dates { font-size: 13px; line-height: 1.48; color: var(--muted); }
+
+    .competition-entry { margin: 0 0 16px; }
+    .competition-entry:last-child { margin-bottom: 0; }
+    .competition-entry .display-link, .competition-entry h2 a { text-decoration: underline; text-underline-offset: 2px; }
+    .competition-entry h2 a:hover { opacity: .7; }
+    .competition-entry p { color: var(--muted); font-size: 12.9px; }
+    .paper-entry { padding-top: 2px; }
+    .paper-entry p { font-style: italic; }
+
+    /* Compact Favorites: each open list is anchored directly below its category. */
+    .favorites-top-rule { width: min(650px,92%); height: 1px; margin: 0 auto 17px; background: #a7a7a7; }
+    .favorites-selector { width: min(710px,100%); margin: 0 auto; }
+    .favorite-categories { width: 100%; display: grid; grid-template-columns: repeat(5,minmax(0,1fr)); gap: 5px; align-items: center; }
+    .favorite-category { appearance: none; display: block; border: 0; background: none; color: var(--white); padding: 2px 0 4px; font-size: clamp(14.5px,1.6vw,17px); line-height: 1.25; text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; white-space: nowrap; cursor: pointer; transition: opacity .2s ease; }
+    .favorite-category[aria-expanded="true"] { text-decoration-thickness: 1.5px; }
+    /* Retain a short bit of space for the list so the footer never overlaps it. */
+    .favorite-panel { width: 100%; position: relative; height: 158px; padding: 0; }
+    .favorite-window { position: absolute; top: 8px; left: var(--favorite-anchor,50%); transform: translateX(-50%); width: 208px; height: 144px; padding: 0; }
+    /* Fixed dotted guide, placed immediately to the left of the scrolling list. */
+    .favorite-guide { position: absolute; pointer-events: none; top: 50%; left: var(--guide-left,1px); transform: translateY(-50%); height: 68px; width: 2px; background: repeating-linear-gradient(to bottom,rgba(243,243,243,.86) 0 2px, transparent 2px 5px); }
+    .favorite-scroll { height: 100%; width: calc(100% - 14px); margin-left: 14px; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; scrollbar-width: none; scroll-behavior: auto; touch-action: pan-y; }
+    .favorite-scroll::-webkit-scrollbar { width: 0; height: 0; display: none; }
+    .favorite-cycle { display: flex; flex-direction: column; }
+    .favorite-item { height: 48px; min-height: 48px; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 0 2px; text-align: center; }
+    .favorite-item h3 { margin: 0; font-size: 14.5px; line-height: 1.23; font-weight: 400; }
+    .favorite-item p { color: var(--muted); font-size: 11.8px; line-height: 1.25; }
+    .favorites-bottom-rule { width: min(495px,65%); height: 1px; background: #a7a7a7; margin: 13px auto 0; }
+
+    .lower-rule { width: min(475px,63%); height: 1px; margin: 26px auto 0; background: #d4d4d4; }
+    body.showing-favorites .lower-rule { display: none; }
+    .contact-links { display: flex; align-items: center; justify-content: center; gap: clamp(74px,10vw,108px); margin: 20px auto 0; }
+    body.showing-favorites .contact-links { margin-top: 32px; }
+    .contact-links a { text-decoration: none; font-style: italic; font-size: clamp(17px,1.7vw,19.5px); line-height: 1.2; }
+    .contact-links a:hover { text-decoration: underline; text-underline-offset: 3px; }
+
+    /* Replace the stock arrow with a real small circular mouse pointer. */
+    @media (hover: hover) and (pointer: fine) {
+      html, body, button, a, .favorite-scroll { cursor: none !important; }
+      #cursor-dot {
+        position: fixed; z-index: 100; top: 0; left: 0; pointer-events: none;
+        width: 8px; height: 8px; border-radius: 50%; background: #fff;
+        box-shadow: 0 0 0 .4px #000;
+        opacity: 0; transform: translate(-50%,-50%);
+        transition: width .15s ease, height .15s ease, opacity .1s ease;
+      }
+      #cursor-dot.visible { opacity: 1; }
+      #cursor-dot.over-action { width: 12px; height: 12px; }
+    }
+
+    @media (max-width: 660px) {
+      .page-viewport { padding: 50px 18px 58px; }
+      .masthead h1 { font-size: clamp(32px,7.7vw,38px); }
+      .section-nav { gap: 3px; margin-top: 26px; }
+      .section-tab { font-size: clamp(13px,3.55vw,17px); }
+      .section-pane { padding: 24px 0 7px; }
+      .about-copy { font-size: 14.5px !important; }
+      .experience-grid { column-gap: 18px; }
+      .experience-column { gap: 25px; }
+      .experience-item h2 { font-size: 14px; }
+      .experience-item .experience-role { font-size: 13px; }
+      .experience-item .experience-dates { font-size: 12.5px; }
+      .favorite-categories { gap: 2px; }
+      .favorite-category { font-size: clamp(14px,3.45vw,16px); }
+      .favorite-window { width: 198px; }
+      .favorite-item h3 { font-size: 14px; }
+      .favorite-item p { font-size: 11.5px; }
+      .lower-rule { margin-top: 24px; width: 75%; }
+      .contact-links { gap: 74px; }
+      .contact-links a { font-size: 19px; }
+    }
+    @media (max-width: 430px) {
+      .experience-grid { column-gap: 14px; }
+      .experience-column { gap: 23px; }
+      .experience-item h2 { font-size: 13.3px; }
+      .experience-item .experience-role { font-size: 12.5px; }
+      .experience-item .experience-dates { font-size: 11.8px; }
+      .favorite-categories { grid-template-columns: repeat(5,minmax(0,1fr)); }
+      .favorite-category { font-size: clamp(12.7px,3.3vw,15px); }
+      .favorite-window { width: 188px; }
+    }
+    @media (max-width: 350px) {
+      .page-viewport { padding: 48px 14px 58px; }
+      .section-nav { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 7px 0; }
+      .section-tab { font-size: 17px; }
+      .experience-grid { grid-template-columns: 1fr; gap: 23px; }
+      .experience-column { gap: 23px; }
+      .experience-item h2 { font-size: 14px; }
+      .favorite-categories { gap: 1px; }
+      .favorite-category { font-size: clamp(11.3px,3.3vw,13px); }
+      .favorite-window { width: 172px; }
+      .favorite-item h3 { font-size: 12.8px; }
+      .favorite-item p { font-size: 11px; }
+      .contact-links { gap: 58px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; animation: none !important; transition: none !important; }
+      #transition-canvas { display: none !important; }
+    }
+  </style>
 </head>
 <body>
-  <!-- A single automatic full-screen wave reveals the portfolio. -->
   <canvas id="transition-canvas" aria-hidden="true"></canvas>
-
   <div class="page-viewport">
     <main id="website" class="website">
-      <header class="masthead">
-        <h1>Vishnu Tailor</h1>
-      </header>
-
+      <header class="masthead"><h1>Vishnu Tailor</h1></header>
       <nav class="section-nav" aria-label="Website sections" role="tablist">
         <button id="tab-about" class="section-tab" type="button" role="tab" aria-controls="panel-about" aria-selected="false" tabindex="0" data-section="about">About me</button>
-        <button id="tab-competitions" class="section-tab" type="button" role="tab" aria-controls="panel-competitions" aria-selected="false" tabindex="-1" data-section="competitions">Competitions</button>
         <button id="tab-experience" class="section-tab" type="button" role="tab" aria-controls="panel-experience" aria-selected="false" tabindex="-1" data-section="experience">Experience</button>
-        <button id="tab-interests" class="section-tab" type="button" role="tab" aria-controls="panel-interests" aria-selected="false" tabindex="-1" data-section="interests">Interests</button>
+        <button id="tab-competitions" class="section-tab" type="button" role="tab" aria-controls="panel-competitions" aria-selected="false" tabindex="-1" data-section="competitions">Competitions</button>
+        <button id="tab-favorites" class="section-tab" type="button" role="tab" aria-controls="panel-favorites" aria-selected="false" tabindex="-1" data-section="favorites">Favorites</button>
       </nav>
-
       <div id="section-stage" class="section-stage" aria-live="polite">
         <section id="panel-about" class="section-pane" role="tabpanel" aria-labelledby="tab-about" hidden>
           <p class="about-copy">Hey, I'm Vishnu! I'm a freshman at UC San Diego studying Economics with interests in finance, consulting, and entrepreneurship. I love meeting new people, exploring new ideas, and trying new things. Outside of that, you'll probably find me playing or watching soccer, traveling, hanging out with friends, or ending up on some random side quest.</p>
         </section>
-
-        <section id="panel-competitions" class="section-pane" role="tabpanel" aria-labelledby="tab-competitions" hidden>
-          <div class="competition-entry">
-            <h2><span class="display-link">MathWorks Math Modeling Challenge</span></h2>
-            <p>National runner up • finalist team out of 770 teams</p>
-          </div>
-          <div class="competition-entry">
-            <h2><span class="display-link">Harvard Crimson Global Quiz Bowl for Economics and Business</span></h2>
-            <p>3rd place worldwide • U.S. champion • team competition</p>
-          </div>
-          <div class="competition-entry paper-entry">
-            <h2><a href="m3-paper.pdf" target="_blank" rel="noopener noreferrer">M3 final paper</a></h2>
-            <p><em>View the paper and competition writeup</em></p>
-          </div>
-        </section>
-
         <section id="panel-experience" class="section-pane" role="tabpanel" aria-labelledby="tab-experience" hidden>
-          <div class="experience-entry">
-            <span class="experience-year">'26 →</span>
-            <div><h2>Bank of America Internship</h2><p>Summer intern</p></div>
-          </div>
-          <div class="experience-entry">
-            <span class="experience-year">'25 →</span>
-            <div><h2>CliftonLarsonAllen</h2><p>Summer intern</p></div>
-          </div>
-          <div class="experience-entry">
-            <span class="experience-year">'25 →</span>
-            <div><h2>Brooklyn Youth Charitable Investment Group</h2><p>Investment Analyst</p></div>
+          <div class="experience-top-rule" aria-hidden="true"></div>
+          <div class="experience-grid">
+            <div class="experience-column">
+              <div class="experience-item"><h2>Student Foundation Investment Committee ($1.7M AUM)</h2><p class="experience-role">Junior Analyst</p><p class="experience-dates">October 2026 – Present</p></div>
+              <div class="experience-item"><h2>Lumnus Consulting</h2><p class="experience-role">Intern</p><p class="experience-dates">October 2026 – Present</p></div>
+              <div class="experience-item"><h2>Bank of America Internship</h2><p class="experience-role">Summer intern</p><p class="experience-dates">June – August 2026</p></div>
+            </div>
+            <div class="experience-column">
+              <div class="experience-item"><h2>Clean Connect LLC</h2><p class="experience-role">Chief Executive Officer</p><p class="experience-dates">April 2025 – March 2026</p></div>
+              <div class="experience-item"><h2>CliftonLarsonAllen</h2><p class="experience-role">Summer intern</p><p class="experience-dates">June – July 2025</p></div>
+              <div class="experience-item"><h2>Crackd</h2><p class="experience-role">Growth</p><p class="experience-dates">April – October 2025</p></div>
+            </div>
           </div>
         </section>
-
-        <section id="panel-interests" class="section-pane" role="tabpanel" aria-labelledby="tab-interests" hidden>
-          <div class="interests-gallery">
-            <figure><img src="travel.jpg" alt="Friends" loading="lazy"><figcaption>Friends</figcaption></figure>
-            <figure><img src="soccer.jpg" alt="Soccer" loading="lazy"><figcaption>Soccer</figcaption></figure>
-            <figure><img src="formula1.jpg" alt="Formula 1" loading="lazy"><figcaption>Formula 1</figcaption></figure>
-            <figure><img src="travel2.jpg" alt="Travel" loading="lazy"><figcaption>Travel</figcaption></figure>
+        <section id="panel-competitions" class="section-pane" role="tabpanel" aria-labelledby="tab-competitions" hidden>
+          <div class="competition-entry"><h2><span class="display-link">MathWorks Math Modeling Challenge</span></h2><p>National runner up • finalist team out of 770 teams</p></div>
+          <div class="competition-entry"><h2><span class="display-link">Harvard Crimson Global Quiz Bowl for Economics and Business</span></h2><p>3rd place worldwide • U.S. champion • team competition</p></div>
+          <div class="competition-entry paper-entry"><h2><a href="m3-paper.pdf" target="_blank" rel="noopener noreferrer">M3 final paper</a></h2><p><em>View the paper and competition writeup</em></p></div>
+        </section>
+        <section id="panel-favorites" class="section-pane" role="tabpanel" aria-labelledby="tab-favorites" hidden>
+          <div class="favorites-top-rule" aria-hidden="true"></div>
+          <div class="favorites-selector">
+          <div class="favorite-categories" aria-label="Favorite categories">
+            <button class="favorite-category" type="button" data-favorite="songs" aria-expanded="false" aria-controls="favorite-panel">Songs</button>
+            <button class="favorite-category" type="button" data-favorite="sports" aria-expanded="false" aria-controls="favorite-panel">Sports</button>
+            <button class="favorite-category" type="button" data-favorite="food" aria-expanded="false" aria-controls="favorite-panel">Food</button>
+            <button class="favorite-category" type="button" data-favorite="travel" aria-expanded="false" aria-controls="favorite-panel">Travel</button>
+            <button class="favorite-category" type="button" data-favorite="movies" aria-expanded="false" aria-controls="favorite-panel">Movies</button>
           </div>
+          <div id="favorite-panel" class="favorite-panel" hidden>
+            <div class="favorite-window">
+              <span class="favorite-guide" aria-hidden="true"></span>
+              <div id="favorite-scroll" class="favorite-scroll" role="region" tabindex="0" aria-label="Scroll through favorites">
+                <div id="favorite-items"></div>
+              </div>
+            </div>
+          </div>
+          </div>
+          <div class="favorites-bottom-rule" aria-hidden="true"></div>
         </section>
       </div>
-
       <div class="lower-rule" aria-hidden="true"></div>
-      <footer class="contact-links">
-        <a href="https://www.linkedin.com/in/vishnu-tailor30" target="_blank" rel="noopener noreferrer">linkedin</a>
-        <a href="mailto:30vishnu.tailor@gmail.com">email</a>
-      </footer>
+      <footer class="contact-links"><a href="https://www.linkedin.com/in/vishnu-tailor30" target="_blank" rel="noopener noreferrer">linkedin</a><a href="mailto:30vishnu.tailor@gmail.com">email</a></footer>
     </main>
   </div>
+  <div id="cursor-dot" aria-hidden="true"></div>
+  <script>
+    (() => {
+      'use strict';
+      const stage = document.getElementById('section-stage');
+      const tabs = [...document.querySelectorAll('.section-tab')];
+      const panes = new Map([...document.querySelectorAll('.section-pane')].map(p => [p.id.replace('panel-', ''),p]));
+      let active = null;
+      const updateStageHeight = () => { if (active) stage.style.height = `${panes.get(active).scrollHeight}px`; };
+      function changeSection(id, immediate = false) {
+        const pane = panes.get(id);
+        if (!pane || (active === id && !immediate)) return;
+        if (active) { const prev = panes.get(active); prev.classList.remove('is-visible'); prev.hidden = true; }
+        pane.hidden = false;
+        active = id;
+        document.body.classList.toggle('showing-favorites', id === 'favorites');
+        for (const tab of tabs) {
+          const chosen = tab.dataset.section === id;
+          tab.setAttribute('aria-selected',String(chosen)); tab.tabIndex = chosen ? 0 : -1;
+        }
+        if (immediate) {
+          stage.style.transition = 'none'; pane.style.transition = 'none';
+          pane.classList.add('is-visible'); updateStageHeight();
+          requestAnimationFrame(() => requestAnimationFrame(() => { stage.style.transition = ''; pane.style.transition = ''; }));
+        } else {
+          requestAnimationFrame(() => { updateStageHeight(); requestAnimationFrame(() => pane.classList.add('is-visible')); });
+        }
+      }
+      tabs.forEach((tab,index) => {
+        tab.addEventListener('click',() => changeSection(tab.dataset.section));
+        tab.addEventListener('keydown',e => {
+          let next;
+          if (e.key === 'ArrowRight') next = (index+1)%tabs.length;
+          else if (e.key === 'ArrowLeft') next = (index+tabs.length-1)%tabs.length;
+          else if (e.key === 'Home') next = 0;
+          else if (e.key === 'End') next = tabs.length-1;
+          else return;
+          e.preventDefault(); changeSection(tabs[next].dataset.section); tabs[next].focus();
+        });
+      });
+      changeSection('about',true);
+      window.addEventListener('resize',updateStageHeight,{passive:true});
+
+      // Source order is the order the visitor sees when scrolling downward.
+      const favorites = {
+        songs: [
+          ['Reflections','The Neighbourhood'],
+          ['Disillusioned','Daniel Caesar'],
+          ['Lavender Sunflower','Tory Lanez'],
+          ['Doses & Mimosas','Cherub'],
+          ['WASTED ON ME','Angrybaby'],
+          ["Flight’s Booked",'Drake'],
+          ['Hometown Glory','Adele'],
+          ['Nights','Frank Ocean']
+        ],
+        sports: [
+          ['Soccer','Atlético Madrid'],
+          ['Formula 1','Ferrari'],
+          ['Basketball','Phoenix Suns'],
+          ['Pickleball','']
+        ],
+        food: [
+          ['Chipotle',''],
+          ['North Italia',''],
+          ["Goody’s Marketplace",'Breakfast burrito'],
+          ['MOD Pizza',''],
+          ['Subway','']
+        ],
+        travel: [['Spain',''],['Italy',''],['France',''],['Belgium',''],['India',''],['Denmark',''],['Mexico','']],
+        movies: [
+          ['Avengers: Infinity War',''],
+          ['Dune: Part Two',''],
+          ['Inception',''],
+          ['Star Wars: Episode II – Attack of the Clones',''],
+          ['Interstellar',''],
+          ['La La Land',''],
+          ['The Notebook',''],
+          ['Spider-Man: Across the Spider-Verse',''],
+          ['Spider-Man: Far From Home',''],
+          ['The Social Network',''],
+          ['The Great Gatsby',''],
+          ['TRON: Legacy','']
+        ]
+      };
+      const categories = [...document.querySelectorAll('.favorite-category')];
+      const favPanel = document.getElementById('favorite-panel');
+      const favScroll = document.getElementById('favorite-scroll');
+      const favItems = document.getElementById('favorite-items');
+      let selected = null;
+      let cycleHeight = 0;
+      let correctingScroll = false;
+      function buildFavorites(kind) {
+        favItems.replaceChildren();
+        const cycle = document.createElement('div'); cycle.className = 'favorite-cycle';
+        for (const [title,subtitle] of favorites[kind]) {
+          const item = document.createElement('div'); item.className = 'favorite-item';
+          const h = document.createElement('h3'); h.textContent = title; item.append(h);
+          if (subtitle) { const p = document.createElement('p'); p.textContent = subtitle; item.append(p); }
+          cycle.append(item);
+        }
+        // Three identical cycles permit native mousewheel, trackpad, keyboard,
+        // and touch scrolling. Recentering in an identical cycle is visually seamless.
+        favItems.append(cycle,cycle.cloneNode(true),cycle.cloneNode(true));
+        cycleHeight = cycle.offsetHeight;
+        favScroll.scrollTop = cycleHeight;
+        positionFavoriteGuide();
+        favScroll.setAttribute('aria-label', `${kind[0].toUpperCase()}${kind.slice(1)} favorites. Scroll to browse continuously.`);
+      }
+      function positionFavoriteGuide() {
+        const windowEl = favPanel.querySelector('.favorite-window');
+        const firstCycle = favItems.querySelector('.favorite-cycle');
+        if (!windowEl || !firstCycle) return;
+        const width = favScroll.getBoundingClientRect().width;
+        const center = favScroll.offsetLeft + width / 2;
+        const textWidths = [...firstCycle.querySelectorAll('h3,p')].map(el => el.getBoundingClientRect().width);
+        const maxTextWidth = Math.max(...textWidths, 0);
+        // Just outside the widest visible title or subtitle, without touching the text.
+        const guideLeft = Math.max(2, Math.min(center - 17, center - maxTextWidth/2 - 11));
+        windowEl.style.setProperty('--guide-left', `${Math.round(guideLeft)}px`);
+      }
+      function positionFavorite(kind) {
+        const trigger = categories.find(button => button.dataset.favorite === kind);
+        const windowEl = favPanel.querySelector('.favorite-window');
+        if (!trigger || !windowEl || favPanel.hidden) return;
+        const viewportX = trigger.getBoundingClientRect().left + trigger.getBoundingClientRect().width / 2;
+        const halfWidth = windowEl.getBoundingClientRect().width / 2;
+        // On narrow screens, stay fully in view while remaining as close to the chosen tab as possible.
+        const safeX = Math.max(halfWidth + 9, Math.min(window.innerWidth - halfWidth - 9, viewportX));
+        const panelX = favPanel.getBoundingClientRect().left;
+        favPanel.style.setProperty('--favorite-anchor', `${safeX - panelX}px`);
+      }
+      function setFavorite(kind) {
+        const opening = kind !== selected;
+        selected = opening ? kind : null;
+        categories.forEach(b => b.setAttribute('aria-expanded',String(opening && b.dataset.favorite === kind)));
+        if (!opening) { favPanel.hidden = true; updateStageHeight(); return; }
+        favPanel.hidden = false;
+        positionFavorite(kind);
+        buildFavorites(kind);
+        requestAnimationFrame(updateStageHeight);
+      }
+      categories.forEach(b => b.addEventListener('click',() => setFavorite(b.dataset.favorite)));
+      favScroll.addEventListener('scroll',() => {
+        if (!selected || !cycleHeight || correctingScroll) return;
+        const current = favScroll.scrollTop;
+        let corrected = current;
+        // Recenter only when the user moves near an edge of the 3-cycle track.
+        if (current < cycleHeight*.5) corrected = current + cycleHeight;
+        else if (current > cycleHeight*1.5) corrected = current-cycleHeight;
+        if (corrected !== current) {
+          correctingScroll = true;
+          favScroll.scrollTop = corrected;
+          correctingScroll = false;
+        }
+      },{passive:true});
+      // Keep the same item in view if font sizing changes on device rotation.
+      window.addEventListener('resize',() => {
+        if (selected) {
+          positionFavorite(selected);
+          positionFavoriteGuide();
+          const old = cycleHeight;
+          const newHeight = favItems.firstElementChild?.offsetHeight || old;
+          if (old && newHeight !== old) {
+            favScroll.scrollTop = (favScroll.scrollTop/old)*newHeight;
+            cycleHeight = newHeight;
+          }
+        }
+      },{passive:true});
+
+      // Custom white circular mouse cursor. Touch devices retain native behavior.
+      if (window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
+        const dot = document.getElementById('cursor-dot');
+        document.addEventListener('pointermove',e => {
+          if (e.pointerType && e.pointerType !== 'mouse') return;
+          dot.style.left = `${e.clientX}px`; dot.style.top = `${e.clientY}px`;
+          dot.classList.add('visible');
+          dot.classList.toggle('over-action',!!e.target.closest('a,button'));
+        },{passive:true});
+        document.addEventListener('pointerout',e => { if (!e.relatedTarget) dot.classList.remove('visible'); });
+        window.addEventListener('blur',() => dot.classList.remove('visible'));
+      }
+
+      // Original automatic wave intro, independent from the tabs and Favorites.
+      const canvas = document.getElementById('transition-canvas');
+      if (!canvas || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        canvas?.remove(); return;
+      }
+      const ctx = canvas.getContext('2d',{alpha:true});
+      if (!ctx) { canvas.remove(); return; }
+      const WAVE_SECONDS = 2.45;
+      let w=0,h=0,pixelRatio=1,startTime=0,completed=false,frame=0;
+      document.body.classList.add('wave-active');
+      function resizeCanvas() {
+        w=Math.max(1,window.innerWidth); h=Math.max(1,window.innerHeight);
+        pixelRatio=Math.min(window.devicePixelRatio||1,2);
+        canvas.width=Math.round(w*pixelRatio); canvas.height=Math.round(h*pixelRatio);
+        ctx.setTransform(pixelRatio,0,0,pixelRatio,0,0);
+        ctx.fillStyle='#000'; ctx.fillRect(0,0,w,h); canvas.style.background='transparent';
+      }
+      const ease=t=>t*t*(3-2*t);
+      const clamp=t=>Math.min(1,Math.max(0,t));
+      function shape(radius,time,amplitude,phaseOffset=0) {
+        const midX=w*.5,midY=h*.5,steps=260;
+        ctx.beginPath();
+        for(let i=0;i<=steps;i++) {
+          const angle=i/steps*Math.PI*2;
+          const crest=Math.sin(angle*7-time*12+phaseOffset)*amplitude;
+          const swell=Math.sin(angle*11+time*7+phaseOffset*.7)*amplitude*.33;
+          const r=Math.max(0,radius+crest+swell);
+          const x=midX+r*Math.cos(angle),y=midY+r*Math.sin(angle);
+          if(i===0)ctx.moveTo(x,y);else ctx.lineTo(x,y);
+        }
+        ctx.closePath();
+      }
+      function finish() {
+        if(completed)return;
+        completed=true; cancelAnimationFrame(frame);
+        document.body.classList.remove('wave-active');
+        canvas.remove(); window.removeEventListener('resize',resizeCanvas);
+      }
+      function render(now) {
+        if(completed)return;
+        try {
+          if(!startTime)startTime=now;
+          const t=clamp((now-startTime)/(WAVE_SECONDS*1000));
+          const p=ease(t), r=5+(Math.hypot(w*.5,h*.5)+105)*p;
+          const amp=Math.min(r*.11,14+12*(1-t));
+          ctx.setTransform(pixelRatio,0,0,pixelRatio,0,0);
+          ctx.globalCompositeOperation='source-over';ctx.globalAlpha=1;
+          ctx.fillStyle='#000';ctx.fillRect(0,0,w,h);
+          ctx.globalCompositeOperation='destination-out';shape(r,t,amp);ctx.fill();
+          ctx.globalCompositeOperation='source-over';
+          const fade=Math.pow(1-t,.63);
+          ctx.strokeStyle=`rgba(255,255,255,${.68*fade})`;ctx.lineWidth=1.3;shape(r,t,amp);ctx.stroke();
+          ctx.strokeStyle=`rgba(255,255,255,${.23*fade})`;ctx.lineWidth=1;
+          shape(Math.max(0,r-23),t,amp*.78,1.4);ctx.stroke();
+          ctx.strokeStyle=`rgba(255,255,255,${.12*fade})`;
+          shape(Math.max(0,r-48),t,amp*.55,2.1);ctx.stroke();
+          if(t>=1){finish();return;}
+          frame=requestAnimationFrame(render);
+        }catch(e){finish();}
+      }
+      resizeCanvas();window.addEventListener('resize',resizeCanvas,{passive:true});
+      frame=requestAnimationFrame(render);
+      window.setTimeout(finish,WAVE_SECONDS*1000+1000);
+    })();
+  </script>
   <noscript><style>#transition-canvas{display:none!important}</style></noscript>
 </body>
 </html>
